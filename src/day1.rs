@@ -23,7 +23,7 @@ pub fn a() -> io::Result<()> {
         sum += combined_digit;
     }
 
-    println!("Answer A: {}", sum);
+    println!("Answer 1A: {}", sum);
 
     Ok(())
 }
@@ -39,7 +39,7 @@ pub fn b() -> io::Result<()> {
 
         let mut cur_substr = String::new();
 
-        println!("Original line: {}", line_tmp);
+        //println!("Original line: {}", line_tmp);
 
         for char in line_tmp.chars() {
             cur_substr.push(char);
@@ -55,7 +55,7 @@ pub fn b() -> io::Result<()> {
             cur_substr = cur_substr.replace("nine", "n9e");
         }
 
-        println!("Replaced line: {}", cur_substr);
+        //println!("Replaced line: {}", cur_substr);
 
         let first_digit_index: usize = cur_substr.find(char::is_numeric).unwrap();
         let last_digit_index: usize = cur_substr.rfind(char::is_numeric).unwrap();
@@ -67,13 +67,13 @@ pub fn b() -> io::Result<()> {
             .parse::<i64>()
             .unwrap();
 
-        println!("Combined digit: {}", combined_digit);
-        println!("--------------");
+        //println!("Combined digit: {}", combined_digit);
+        //println!("--------------");
 
         sum += combined_digit;
     }
 
-    println!("Answer B: {}", sum);
+    println!("Answer 2B: {}", sum);
 
     Ok(())
 }
