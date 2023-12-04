@@ -64,37 +64,33 @@ impl Game {
     }
 
     pub fn powers(&self) -> i64 {
-		let mut max_found: HashMap<Color, i64> = HashMap::from([
-			(Color::Red, 0),
-			(Color::Green, 0),
-			(Color::Blue, 0),	
-		]);
-    
-    	for (color, num_balls) in &self.rounds {
-    		match max_found.get(color) {
-    			Some(max_color_balls) => {
-    				if num_balls > max_color_balls {
-    					max_found.insert(color.clone(), *num_balls);
-    				}
-    			}
-    			None => {
-    				panic!("Unknown color!");
-    			}
-    		}
-    	}
+        let mut max_found: HashMap<Color, i64> =
+            HashMap::from([(Color::Red, 0), (Color::Green, 0), (Color::Blue, 0)]);
 
-		let mut result: i64 = 0;
-		
-    	for val in max_found.values() {
-    		if result == 0 {
-    			result += val
-    		}
-    		else {
-    			result *= val
-    		}
-    	}
+        for (color, num_balls) in &self.rounds {
+            match max_found.get(color) {
+                Some(max_color_balls) => {
+                    if num_balls > max_color_balls {
+                        max_found.insert(color.clone(), *num_balls);
+                    }
+                }
+                None => {
+                    panic!("Unknown color!");
+                }
+            }
+        }
 
-    	result
+        let mut result: i64 = 0;
+
+        for val in max_found.values() {
+            if result == 0 {
+                result += val
+            } else {
+                result *= val
+            }
+        }
+
+        result
     }
 }
 
