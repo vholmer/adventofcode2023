@@ -1,68 +1,122 @@
-use std::fs::File;
 use std::collections::HashMap;
-use std::vec::Vec;
+use std::fs::File;
 use std::io::{self, BufRead, BufReader};
+use std::str::FromStr;
+use std::vec::Vec;
+use std::fmt;
 
+#[derive(Eq, Hash, PartialEq)]
 enum Color {
-	Blue,
-	Red,
-	Green,
+    Red,
+    Green,
+    Blue,
+}
+
+impl FromStr for Color {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Color, Self::Err> {
+        match input {
+            "red" => Ok(Color::Red),
+            "green" => Ok(Color::Green),
+            "blue" => Ok(Color::Blue),
+            _ => Err(()),
+        }
+    }
+}
+
+impl fmt::Display for Color {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			Color::Red => write!(f, "Red"),
+			Color::Green => write!(f, "Green"),
+			Color::Blue => write!(f, "Blue"),
+		}
+	}
 }
 
 struct Game {
-	id: i64,
-	rules: Vec<(Color, i64)>,
-	rounds: Vec<(Color, i64)>
+    id: i64,
+    rules: HashMap<Color, i64>,
+    rounds: Vec<(Color, i64)>,
 }
 
 impl Game {
-	pub fn new(id: i64, rules: Vec<(Color, i64)>) -> Game {
-		Game {
-			id,
-			rules,
-			rounds: Vec::new()
-		}
-	}
+    pub fn new(id: i64, rules: HashMap<Color, i64>, rounds: Vec<(Color, i64)>) -> Game {
+        Game { id, rules, rounds }
+    }
 
-	// TODO: Add a function here for summing IDs given rules
+    pub fn validate(&self) -> bool {
+    	println!("Game {}:", self.id);
+    	let mut valid: bool = true;
+        for (color, num_balls) in &self.rounds {
+        	print!("{} {}; ", num_balls, color);
+            match self.rules.get(color) {
+                Some(rule_balls) => {
+                    if num_balls > rule_balls {
+                        valid = false;
+                    }
+                }
+                None => {
+                    panic!("WOOPS!");
+                }
+            }
+        }
+        println!("\nValid: {}", valid);
+        valid
+    }
 }
 
 pub fn a() -> io::Result<()> {
-	let file = File::open("data/2/a.txt")?;
-	let reader = BufReader::new(file);
+    let file = File::open("data/2/a.txt")?;
+    let reader = BufReader::new(file);
 
-	for line in reader.lines() {
-		let mut line_tmp = line?;
+    let mut sum: i64 = 0;
 
-		if let Some(stripped) = line_tmp.strip_prefix("Game ") {
-			line_tmp = stripped.to_string();
-		}
-		else {
-			panic!("Woops!");
-		}
+    for line in reader.lines() {
+        let mut line_tmp = line?;
 
-		let colon_split: Vec<&str> = line_tmp.split(':').collect();
-		let round_split: Vec<&str> = colon_split[1].split(';').collect();
+        if let Some(stripped) = line_tmp.strip_prefix("Game ") {
+            line_tmp = stripped.to_string();
+        } else {
+            panic!("Woops!");
+        }
 
-		let rounds: Vec<(Color, i64)> = Vec::new();
+        let colon_split: Vec<&str> = line_tmp.split(':').collect();
+        let round_split: Vec<&str> = colon_split[1].split(';').collect();
 
-		for round_str in round_split {
-			let color_split: Vec<&str> = round_str.split(',').collect();
+        let mut rounds: Vec<(Color, i64)> = Vec::new();
 
-			for color_str in color_split {
-				let color_tmp = color_str;
+        for round_str in round_split {
+            let color_split: Vec<&str> = round_str.split(',').collect();
 
-				// TODO:
-				// Here we have something like '3 blue'
-				// Next step is split on ' ' and then finally start pushing tuples to the rounds vec.
-			}
-		}
-		
-		// Construct Game object
-		let id = colon_split[0].parse::<i64>().unwrap();
-		let rules: Vec<(Color, i64)> = vec![(Color::Red, 12), (Color::Green, 13), (Color::Blue, 14)];
-		
-	}
+            for color_str in color_split {
+                let color_tmp = color_str.trim();
 
-	Ok(())
+                let num_color: Vec<&str> = color_tmp.split(' ').collect();
+
+                let num_balls: i64 = num_color[0].parse::<i64>().unwrap();
+                let color: Color = num_color[1].parse::<Color>().unwrap();
+
+                rounds.push((color, num_balls));
+            }
+        }
+
+        // Construct Game object
+        let id = colon_split[0].parse::<i64>().unwrap();
+        let rules: HashMap<Color, i64> =
+            HashMap::from([(Color::Red, 12), (Color::Green, 13), (Color::Blue, 14)]);
+
+        let game: Game = Game::new(id, rules, rounds);
+
+        if game.validate() {
+        	println!("Adding Game {}", game.id);
+        	sum += game.id;
+        }
+        println!("---------------");
+    }
+
+    println!("Answer 2A: {}", sum);
+
+    Ok(())
 }

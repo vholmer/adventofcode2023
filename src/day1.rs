@@ -73,7 +73,7 @@ pub fn b() -> io::Result<()> {
         sum += combined_digit;
     }
 
-    println!("Answer 2B: {}", sum);
+    println!("Answer 1B: {}", sum);
 
     Ok(())
 }
