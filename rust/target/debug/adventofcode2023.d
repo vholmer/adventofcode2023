@@ -1,0 +1,1 @@
+/home/vholmer/git/adventofcode2023/target/debug/adventofcode2023: /home/vholmer/git/adventofcode2023/src/day1.rs /home/vholmer/git/adventofcode2023/src/day2.rs /home/vholmer/git/adventofcode2023/src/main.rs
