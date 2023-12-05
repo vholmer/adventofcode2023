@@ -75,10 +75,9 @@ def solve():
         width = len(line.strip())
         matrix.append(line.strip())
 
-    height = i
+    height = i + 1
 
     result = 0
-
     for i, row in enumerate(matrix):
         seen_sep = True
         for j, col in enumerate(row):
