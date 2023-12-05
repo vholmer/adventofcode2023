@@ -139,7 +139,7 @@ def solve():
 
     gear_ratios = 0
 
-    # Then, for each symbol coord, get number of neighboring numbers
+    # Then, for each symbol coord, get neighbors
     for coords in symbol_coords:
         i, j = coords
 
