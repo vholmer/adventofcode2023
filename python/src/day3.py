@@ -1,3 +1,8 @@
+from typing import (
+    List,
+    Tuple
+)
+
 width = 0
 height = 0
 matrix = []
@@ -65,6 +70,38 @@ def has_symbol_neighbor(row: int, col: int) -> bool:
         fn = fn or is_symbol(check)
 
     return fn
+
+def get_symbol_coords() -> List[Tuple[int, int]]:
+    result = []
+
+    for i, row in enumerate(matrix):
+        for j, col in enumerate(matrix):
+            if is_symbol(matrix[i][j]):
+                result.append((i, j))
+
+    return result
+
+def get_neighbors(row: int, col: int) -> List[int]:
+    neighbors = []
+
+    for i in range(row - 1, row + 2):
+        seen_sep = True
+        for j in range(col - 1, col + 2):
+            if i < 0 or i > width:
+                continue
+            if j < 0 or j > height:
+                continue
+
+            n = get_number(i, j)
+
+            if n is not None and seen_sep:
+                seen_sep = False
+                neighbors.append(n)
+
+            if n is None and not seen_sep:
+                seen_sep = True
+
+    return neighbors
         
 def solve():
     global width, height
@@ -87,7 +124,7 @@ def solve():
                 hn = has_symbol_neighbor(i, j)
 
                 if hn and seen_sep:
-                    print(f"Adding {fn} from {i}, {j}")
+                    # print(f"Adding {fn} from {i}, {j}")
                     seen_sep = False
                     result += fn
             if not matrix[i][j].isdigit():
@@ -95,3 +132,22 @@ def solve():
             
 
     print(f"Answer 3A: {result}")
+
+    # 3B:
+    # First, find the coordinates of all symbols
+    symbol_coords = get_symbol_coords()
+
+    gear_ratios = 0
+
+    # Then, for each symbol coord, get number of neighboring numbers
+    for coords in symbol_coords:
+        i, j = coords
+
+        neighbors = get_neighbors(i, j)
+        print(neighbors)
+
+        # Finally, if 2 neighbors, we have a gear
+        if len(neighbors) == 2:
+            gear_ratios += neighbors[0] * neighbors[1]
+
+    print(f"Answer 3B: {gear_ratios}")
