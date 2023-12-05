@@ -144,7 +144,6 @@ def solve():
         i, j = coords
 
         neighbors = get_neighbors(i, j)
-        print(neighbors)
 
         # Finally, if 2 neighbors, we have a gear
         if len(neighbors) == 2:
