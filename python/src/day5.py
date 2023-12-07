@@ -5,7 +5,7 @@ from typing import List
 from datetime import datetime
 
 class Map:
-    diffs: List[int]
+    diff_values: List[int]
     source_starts: List[int]
     dest_starts: List[int]
     range_lengths: List[int]
@@ -14,49 +14,95 @@ class Map:
         self.source_starts = source_starts
         self.dest_starts = dest_starts
         self.range_lengths = range_lengths
-        self.diffs = []
         self.sources = []
         self.dests = []
+        self.diffs = []
+        self.diff_values = []
 
         for i in range(len(self.source_starts)):
             self.sources.append(range(self.source_starts[i], self.source_starts[i] + self.range_lengths[i]))
             self.dests.append(range(self.dest_starts[i], self.dest_starts[i] + self.range_lengths[i]))
+            self.diffs.append(range(self.dest))
     
         for i in range(len(self.source_starts)):
-            self.diffs.append(self.dest_starts[i] - self.source_starts[i])
+            self.diff_values.append(self.dest_starts[i] - self.source_starts[i])
 
     def get(self, value: int) -> int:
         for i in range(len(self.sources)):
             if value in self.sources[i]:
-                return self.diffs[i] + value
+                return self.diff_values[i] + value
         return value
 
+    def get_range(self, values: range) -> List[range]:
+        
 
-    def get_test_starts(self, seed_range: range) -> List[int]:
+    def split_output_ranges(self, seed: range) -> List[range]:
+        """
+        Cases
+        1.
+        [seed_start to source_start - 1] = range(seed.start, src.start)
+        [source_start to seed_end] = range(src.start, seed.stop + 1)
+        
+        | --- seed --- |
+           | --- source --- |
+
+        | ------ seed ------ |
+            | --- source --- |
+        
+        2.
+        [seed_start to source_end] = range(seed.start, src.stop + 1)
+        [source_end + 1 to seed_end] = range(src.stop + 1, seed.stop + 1)
+        
+             | --- seed --- |
+        | --- source --- |
+        
+        | ------ seed ------ |
+        | --- source --- |
+        
+        3.
+        [seed_start to seed_end] = range(seed.start, seed.stop + 1)
+        
+           | - seed - |
+        | --- source --- |
+
+        | ---- seed ---- |
+        | --- source --- |
+        
+        4.
+        [seed_start to source_start - 1] = range(seed.start, src.start)
+        [source_start to source_end] = range(src.start, src.end + 1)
+        [source_end + 1 to seed_end] = range(src.end + 1, seed.stop)
+        
+        | --- seed --- |
+         | - source - |
+        
+        Summary: We have 4 distinct cases of overlap.
+         
+        Algorithm:
+        1. Find which of case 1-4.
+        2. Split into new ranges accordingly, return them from function f
+        3. Repeat step 2 for next map, with output from previous step as input
+        4. Finally a range of locations will be retrieved. Get the location value
+           for the first value in each range, return the minimum
+        """
+        
         result = []
+        
+        
+        for src in self.sources:
+            # Case 1
+            if seed.start < src.start and seed.stop <= src.stop and src.start > seed.start:
+                result += [range(seed.start, src.start), range(src.start, seed.stop + 1)]
 
-        breakpoint()
-
-        #TODO: Refactor this to use ranges! I'm sure we can fix it with ranges :)
-
-        seed_end = seed_start + seed_range - 1
-
-        for i in range(len(self.source_starts)):
-            source_start = self.source_starts[i]
-            source_end = source_start + self.range_lengths[i] - 1
-
-            if seed_start >= source_start and seed_end <= source_end:
-                result.append(seed_start)
-            elif seed_start > source_start and seed_end > source_end and seed_start < source_end:
-                result.append(seed_start)
-                result.append(source_end + 1)
-            elif seed_start < source_start and seed_end < source_end and seed_end > source_start:
-                result.append(source_start)
-                result.append(seed_end + 1)
-            else:
-                result.append(seed_start)
-                
-        return list(set(result))
+            # Case 2
+            elif seed.start >= src.start and seed.stop > src.stop and src.stop < seed.stop:
+                result += [range(seed.start, src.stop + 1), range(src.stop + 1, seed.stop + 1)]
+            # Case 3
+            elif seed.start >= src.start and seed.stop <= src.stop:
+                result += [range(seed.start, seed.stop + 1)]
+            # Case 4
+            elif seed.start < src.start and seed.stop > src.stop:
+                result += [range(seed.start, src.start), range(src.start, src.end + 1), range(src.end + 1, seed.stop)]
 
 def get_map(name: str, data: str) -> Map:
     map_matches = re.findall(f'{name} map:\s+((?:\d+\s+)+\d+)', data)
