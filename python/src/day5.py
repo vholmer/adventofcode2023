@@ -4,105 +4,133 @@ import numpy as np
 from typing import List
 from datetime import datetime
 
+def split(inp: range, chk: range) -> List[range]:
+    """
+    Cases
+    1.
+    [inp_start to chk_start - 1] = range(inp.start, chk.start)
+    [chk_start to inp_end] = range(chk.start, inp.stop)
+    
+    | --- inp --- |
+       | --- chk --- |
+
+    | ------ inp ------ |
+        | --- chk --- |
+    
+    2.
+    [inp_start to chk_end] = range(inp.start, chk.stop)
+    [chk_end + 1 to inp_end] = range(chk.stop, inp.stop)
+    
+         | --- inp --- |
+    | --- chk --- |
+    
+    | ------ inp ------ |
+    | --- chk --- |
+    
+    3.
+    [inp_start to inp_end] = range(inp.start, inp.stop)
+    
+       | - inp - |
+    | --- chk --- |
+    
+    4.
+    [inp_start to chk_start - 1] = range(inp.start, chk.start)
+    [chk_start to chk_end] = range(chk.start, chk.end)
+    [chk_end + 1 to inp_end] = range(chk.end, inp.stop)
+    
+    | --- inp --- |
+     | - chk - |
+    
+    Summary: We have 4 distinct cases of overlap.
+     
+    Algorithm:
+    1. Find which of case 1-4.
+    2. Split into new ranges accordingly, return them from function f
+    3. Repeat step 2 for next map, with output from previous step as input
+    4. Finally a range of locations will be retrieved. Get the location value
+       for the first value in each range, return the minimum
+    """
+    # Case 1
+    if inp.start < chk.start and inp.stop <= chk.stop and chk.start < inp.stop:
+        return [range(inp.start, chk.start), range(chk.start, inp.stop)]
+    # Case 2
+    elif inp.start >= chk.start and inp.stop > chk.stop and chk.stop > inp.start:
+        return [range(inp.start, chk.stop), range(chk.stop, inp.stop)]
+    # Case 3
+    elif inp.start >= chk.start and inp.stop <= chk.stop:
+        return [inp]
+    # Case 4
+    elif inp.start < chk.start and inp.stop > chk.stop:
+        return [range(inp.start, chk.start), range(chk.start, chk.stop), range(chk.stop, inp.stop)]
+
+def overlaps(a: range, b: range) -> bool:
+    # Case 1
+    if a.start < b.start and a.stop <= b.stop and b.start < a.stop:
+        return True
+    # Case 2
+    elif a.start >= b.start and a.stop > b.stop and b.stop > a.start:
+        return True
+    # Case 3
+    elif a.start >= b.start and a.stop <= b.stop:
+        return True
+    # Case 4
+    elif a.start < b.start and a.stop > b.stop:
+        return True
+    return False
+        
 class Map:
-    diff_values: List[int]
+    name: str
+    diffs: List[int]
     source_starts: List[int]
     dest_starts: List[int]
     range_lengths: List[int]
 
-    def __init__(self, source_starts: List[int], dest_starts: List[int], range_lengths: List[int]):
+    def __init__(self, name: str, source_starts: List[int], dest_starts: List[int], range_lengths: List[int]):
+        self.name = name
         self.source_starts = source_starts
         self.dest_starts = dest_starts
         self.range_lengths = range_lengths
         self.sources = []
         self.dests = []
         self.diffs = []
-        self.diff_values = []
 
+        for i in range(len(self.source_starts)):
+            self.diffs.append(self.dest_starts[i] - self.source_starts[i])
+            
         for i in range(len(self.source_starts)):
             self.sources.append(range(self.source_starts[i], self.source_starts[i] + self.range_lengths[i]))
             self.dests.append(range(self.dest_starts[i], self.dest_starts[i] + self.range_lengths[i]))
-            self.diffs.append(range(self.dest))
-    
-        for i in range(len(self.source_starts)):
-            self.diff_values.append(self.dest_starts[i] - self.source_starts[i])
 
     def get(self, value: int) -> int:
         for i in range(len(self.sources)):
             if value in self.sources[i]:
-                return self.diff_values[i] + value
+                return self.diffs[i] + value
         return value
 
-    def get_range(self, values: range) -> List[range]:
-        
+    def get_split_ranges(self, inp_ranges: List[range]) -> List[range]:
+        min_source = min([s.start for s in self.sources])
 
-    def split_output_ranges(self, seed: range) -> List[range]:
-        """
-        Cases
-        1.
-        [seed_start to source_start - 1] = range(seed.start, src.start)
-        [source_start to seed_end] = range(src.start, seed.stop + 1)
-        
-        | --- seed --- |
-           | --- source --- |
-
-        | ------ seed ------ |
-            | --- source --- |
-        
-        2.
-        [seed_start to source_end] = range(seed.start, src.stop + 1)
-        [source_end + 1 to seed_end] = range(src.stop + 1, seed.stop + 1)
-        
-             | --- seed --- |
-        | --- source --- |
-        
-        | ------ seed ------ |
-        | --- source --- |
-        
-        3.
-        [seed_start to seed_end] = range(seed.start, seed.stop + 1)
-        
-           | - seed - |
-        | --- source --- |
-
-        | ---- seed ---- |
-        | --- source --- |
-        
-        4.
-        [seed_start to source_start - 1] = range(seed.start, src.start)
-        [source_start to source_end] = range(src.start, src.end + 1)
-        [source_end + 1 to seed_end] = range(src.end + 1, seed.stop)
-        
-        | --- seed --- |
-         | - source - |
-        
-        Summary: We have 4 distinct cases of overlap.
-         
-        Algorithm:
-        1. Find which of case 1-4.
-        2. Split into new ranges accordingly, return them from function f
-        3. Repeat step 2 for next map, with output from previous step as input
-        4. Finally a range of locations will be retrieved. Get the location value
-           for the first value in each range, return the minimum
-        """
-        
+        #result = [range(0, min_source)]
         result = []
-        
-        
-        for src in self.sources:
-            # Case 1
-            if seed.start < src.start and seed.stop <= src.stop and src.start > seed.start:
-                result += [range(seed.start, src.start), range(src.start, seed.stop + 1)]
 
-            # Case 2
-            elif seed.start >= src.start and seed.stop > src.stop and src.stop < seed.stop:
-                result += [range(seed.start, src.stop + 1), range(src.stop + 1, seed.stop + 1)]
-            # Case 3
-            elif seed.start >= src.start and seed.stop <= src.stop:
-                result += [range(seed.start, seed.stop + 1)]
-            # Case 4
-            elif seed.start < src.start and seed.stop > src.stop:
-                result += [range(seed.start, src.start), range(src.start, src.end + 1), range(src.end + 1, seed.stop)]
+        #if self.name == 'soil-to-fertilizer':
+        #    breakpoint()
+        for inp in inp_ranges:
+            for i, src in enumerate(self.sources):
+                split_ranges = split(inp, src)
+                if split_ranges:
+                    for split_range in split_ranges:
+                        # Transform to output
+                        out_start = split_range.start + self.dests[i].start - src.start
+                        out_end = split_range.stop + self.dests[i].stop - src.stop
+
+                        result.append(range(out_start, out_end))
+            if not any([overlaps(inp, src) for src in self.sources]):
+                result.append(inp)
+
+        #result += [range(max([s.start for s in self.sources]), max([s.stop for s in self.sources]))]
+
+        return list(set(result))
 
 def get_map(name: str, data: str) -> Map:
     map_matches = re.findall(f'{name} map:\s+((?:\d+\s+)+\d+)', data)
@@ -120,7 +148,7 @@ def get_map(name: str, data: str) -> Map:
         source_list.append(source)
         step_list.append(steps)
 
-    return Map(source_starts=source_list, dest_starts=dest_list, range_lengths=step_list)
+    return Map(name=name, source_starts=source_list, dest_starts=dest_list, range_lengths=step_list)
 
 def solve():
     file = open("data/5/test.txt")
@@ -161,24 +189,58 @@ def solve():
 
     seed_ranges = []
     for i in range(0, len(seeds), 2):
-        seed_ranges.append(range(seeds[i], seeds[i] + seeds[i + 1]))
+        seed_ranges.append(range(seeds[i], seeds[i] + seeds[i + 1] + 1))
+        break
+
+    # Brute force solution below. Too slow!
+    #for seed_range in seed_ranges:
+    # print(f"{datetime.now()} - {seed_range}, {min_location}")
+    for i in range(100):
+        output = seed_to_soil.get(i)
+        print(f"seed_to_soil[{i}] = {output}, diff {output - i}")
+
+    for i in range(100):
+        output = soil_to_fertilizer.get(i)
+        print(f"soil_to_fertilizer[{i}] = {output}, diff {output - i}")
+
+    for i in range(100):
+        output = fertilizer_to_water.get(i)
+        print(f"fertilizer_to_water[{i}] = {output}, diff {output - i}")
+
+    for i in range(100):
+        output = water_to_light.get(i)
+        print(f"water_to_light[{i}] = {output}, diff {output - i}")
+
+    for i in range(100):
+        output = light_to_temperature.get(i)
+        print(f"light_to_temperature[{i}] = {output}, diff {output - i}")
+
+    for i in range(100):
+        output = temperature_to_humidity.get(i)
+        print(f"temperature_to_humidity[{i}] = {output}, diff {output - i}")
+
+    for i in range(100):
+        output = humidity_to_location.get(i)
+        print(f"humidity_to_location[{i}] = {output}, diff {output - i}")
+                
+    soil_ranges = seed_to_soil.get_split_ranges(seed_ranges)
+    fertilizer_ranges = soil_to_fertilizer.get_split_ranges(soil_ranges)
+    water_ranges = fertilizer_to_water.get_split_ranges(fertilizer_ranges)
+    light_ranges = water_to_light.get_split_ranges(water_ranges)
+    temperature_ranges = light_to_temperature.get_split_ranges(light_ranges)
+    humidity_ranges = temperature_to_humidity.get_split_ranges(temperature_ranges)
+    location_ranges = humidity_to_location.get_split_ranges(humidity_ranges)
+
+    breakpoint()
 
     min_location = None
-
-    """ # Brute force solution below. Too slow!
-    for seed_range in seed_ranges:
-        print(f"{datetime.now()} - {seed_range}, {min_location}")
-        for i in seed_range:
-            location = get_location(i)
-
-            if not min_location:
-                min_location = location
-            elif location < min_location:
-                min_location = location
-    """
-
-    for seed_range in seed_ranges:
-        seed_to_soil.get_test_starts(seed_range)
     
+    for location_range in location_ranges:
+        location = get_location(location_range.start)
+
+        if not min_location:
+            min_location = location
+        elif location < min_location:
+            min_location = location
     
     print(f"Answer 5B: {min_location}")
