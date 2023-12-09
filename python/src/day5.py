@@ -110,25 +110,30 @@ class Map:
     def get_split_ranges(self, inp_ranges: List[range]) -> List[range]:
         min_source = min([s.start for s in self.sources])
 
-        #result = [range(0, min_source)]
         result = []
 
-        #if self.name == 'soil-to-fertilizer':
-        #    breakpoint()
         for inp in inp_ranges:
             for i, src in enumerate(self.sources):
                 split_ranges = split(inp, src)
+
                 if split_ranges:
                     for split_range in split_ranges:
-                        # Transform to output
-                        out_start = split_range.start + self.dests[i].start - src.start
-                        out_end = split_range.stop + self.dests[i].stop - src.stop
+                        # Transform to each split range to output range:
+                        # 1. find dest - source diff, where source is range(0, 0) if no overlap
+                        # 2. add it to split_range
+                        if not any([overlaps(split_range, src) for src in self.sources]):
+                            dest_range = None
+                        elif not overlaps(split_range, src):
+                            continue
+                        else:
+                            dest_range = self.dests[i]
 
-                        result.append(range(out_start, out_end))
+                        diff_start = dest_range.start - src.start if dest_range else 0
+                        diff_stop = dest_range.stop - src.stop if dest_range else 0
+
+                        result.append(range(split_range.start + diff_start, split_range.stop + diff_stop))
             if not any([overlaps(inp, src) for src in self.sources]):
                 result.append(inp)
-
-        #result += [range(max([s.start for s in self.sources]), max([s.stop for s in self.sources]))]
 
         return list(set(result))
 
@@ -151,7 +156,7 @@ def get_map(name: str, data: str) -> Map:
     return Map(name=name, source_starts=source_list, dest_starts=dest_list, range_lengths=step_list)
 
 def solve():
-    file = open("data/5/test.txt")
+    file = open("data/5/data.txt")
 
     file_str = file.read()
     
@@ -190,38 +195,6 @@ def solve():
     seed_ranges = []
     for i in range(0, len(seeds), 2):
         seed_ranges.append(range(seeds[i], seeds[i] + seeds[i + 1] + 1))
-        break
-
-    # Brute force solution below. Too slow!
-    #for seed_range in seed_ranges:
-    # print(f"{datetime.now()} - {seed_range}, {min_location}")
-    for i in range(100):
-        output = seed_to_soil.get(i)
-        print(f"seed_to_soil[{i}] = {output}, diff {output - i}")
-
-    for i in range(100):
-        output = soil_to_fertilizer.get(i)
-        print(f"soil_to_fertilizer[{i}] = {output}, diff {output - i}")
-
-    for i in range(100):
-        output = fertilizer_to_water.get(i)
-        print(f"fertilizer_to_water[{i}] = {output}, diff {output - i}")
-
-    for i in range(100):
-        output = water_to_light.get(i)
-        print(f"water_to_light[{i}] = {output}, diff {output - i}")
-
-    for i in range(100):
-        output = light_to_temperature.get(i)
-        print(f"light_to_temperature[{i}] = {output}, diff {output - i}")
-
-    for i in range(100):
-        output = temperature_to_humidity.get(i)
-        print(f"temperature_to_humidity[{i}] = {output}, diff {output - i}")
-
-    for i in range(100):
-        output = humidity_to_location.get(i)
-        print(f"humidity_to_location[{i}] = {output}, diff {output - i}")
                 
     soil_ranges = seed_to_soil.get_split_ranges(seed_ranges)
     fertilizer_ranges = soil_to_fertilizer.get_split_ranges(soil_ranges)
@@ -231,16 +204,8 @@ def solve():
     humidity_ranges = temperature_to_humidity.get_split_ranges(temperature_ranges)
     location_ranges = humidity_to_location.get_split_ranges(humidity_ranges)
 
-    breakpoint()
+    min_location = min([x.start for x in location_ranges])
 
-    min_location = None
-    
-    for location_range in location_ranges:
-        location = get_location(location_range.start)
-
-        if not min_location:
-            min_location = location
-        elif location < min_location:
-            min_location = location
+    print(location_ranges)
     
     print(f"Answer 5B: {min_location}")
