@@ -205,7 +205,5 @@ def solve():
     location_ranges = humidity_to_location.get_split_ranges(humidity_ranges)
 
     min_location = min([x.start for x in location_ranges])
-
-    print(location_ranges)
     
     print(f"Answer 5B: {min_location}")
