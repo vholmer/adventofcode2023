@@ -9,14 +9,30 @@ TRANSLATE = {
     "T": "B",
 }
 
+TRANSLATE_JOKER = {
+    "A": "F",
+    "K": "E",
+    "Q": "D",
+    "J": "1",
+    "T": "B",
+}
+
+UNTRANSLATE_JOKER = {
+    "F": "A",
+    "E": "K",
+    "D": "Q",
+    "1": "J",
+    "B": "T",
+}
+
 class HandType(Enum):
-    FIVE_OF_A_KIND = 1
-    FOUR_OF_A_KIND = 2
-    FULL_HOUSE = 3
+    FIVE_OF_A_KIND = 7
+    FOUR_OF_A_KIND = 6
+    FULL_HOUSE = 5
     THREE_OF_A_KIND = 4
-    TWO_PAIR = 5
-    ONE_PAIR = 6
-    HIGH_CARD = 7
+    TWO_PAIR = 3
+    ONE_PAIR = 2
+    HIGH_CARD = 1
 
 class Hand:
     cards: dict
@@ -66,14 +82,73 @@ class Hand:
             return HandType.HIGH_CARD
         raise Exception("Can't find hand type!")
 
-    def translated(self) -> str:
+    def hand_type_test(self, hand) -> HandType:
+        card_dict = {}
+
+        for card in hand:
+            if card not in card_dict:
+                card_dict[card] = 1
+            else:
+                card_dict[card] += 1
+    
+        max_card = max(card_dict.values())
+
+        if max_card < 5:
+            second_max_card = sorted(card_dict.values(), reverse=True)[1]
+        else:
+            second_max_card = 0
+
+        high_card = not any([x for x in card_dict.values() if x > 1])
+
+        if max_card == 5:
+            return HandType.FIVE_OF_A_KIND
+        elif max_card == 4:
+            return HandType.FOUR_OF_A_KIND
+        elif max_card == 3 and second_max_card == 2:
+            return HandType.FULL_HOUSE
+        elif max_card == 3 and second_max_card < 2:
+            return HandType.THREE_OF_A_KIND
+        elif max_card == 2 and second_max_card == 2:
+            return HandType.TWO_PAIR
+        elif max_card == 2 and second_max_card < 2:
+            return HandType.ONE_PAIR
+        elif high_card:
+            return HandType.HIGH_CARD
+        raise Exception("Can't find hand type!")
+
+    def joker_type(self) -> HandType:
+        if self.hand == "JJ857":
+            breakpoint()
+    
+        most_common_card = max(self.cards, key=self.cards.get)
+        highest_card = max(self.translated(joker = True))
+
+        if highest_card in UNTRANSLATE_JOKER:
+            highest_card = UNTRANSLATE_JOKER[highest_card]
+
+        if most_common_card == "J":
+            most_common_card = highest_card
+
+        new_hand = self.hand.replace("J", most_common_card)
+
+        new_htype = self.hand_type_test(new_hand)
+
+        return new_htype
+
+    def translated(self, joker = False) -> str:
         new_hand = ""
         
         for char in self.hand:
-            if char in TRANSLATE:
-                new_hand += TRANSLATE[char]
-            else:
-                new_hand += char
+            if not joker:
+                if char in TRANSLATE:
+                    new_hand += TRANSLATE[char]
+                else:
+                    new_hand += char
+            elif joker:
+                if char in TRANSLATE_JOKER:
+                    new_hand += TRANSLATE_JOKER[char]
+                else:
+                    new_hand += char
                 
         return new_hand
 
@@ -114,3 +189,31 @@ def solve():
             rank += 1
 
     print(f"Answer 7A: {answer}")
+
+    jgroups = {
+        HandType.HIGH_CARD: [],
+        HandType.ONE_PAIR: [],
+        HandType.TWO_PAIR: [],
+        HandType.THREE_OF_A_KIND: [],
+        HandType.FULL_HOUSE: [],
+        HandType.FOUR_OF_A_KIND: [],
+        HandType.FIVE_OF_A_KIND: [],
+    }
+
+    for hand in hands:
+        jgroups[hand.joker_type()].append(hand)
+
+    for jgroup in jgroups:
+        jgroups[jgroup] = sorted(jgroups[jgroup], key = lambda hand: hand.translated(joker = True))
+        print(jgroups[jgroup])
+
+    rank = 1
+    answer = 0
+    
+    for jgroup in jgroups:
+        for hand in jgroups[jgroup]:
+            # print(f"{hand} - rank {rank} * bid {hand.bid}")
+            answer += rank * hand.bid
+            rank += 1
+
+    print(f"Answer 7B: {answer}")
