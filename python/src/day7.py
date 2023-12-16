@@ -44,17 +44,24 @@ class Hand:
         self.bid = bid
         self.hand = hand
     
-        for card in hand:
-            if card not in self.cards:
-                self.cards[card] = 1
-            else:
-                self.cards[card] += 1
+        self.cards = self._get_card_dict(hand)
 
     def __str__(self) -> str:
         return self.hand
 
     def __repr__(self) -> str:
         return self.hand
+
+    def _get_card_dict(self, hand: str) -> dict:
+        cards = {}
+    
+        for card in hand:
+            if card not in cards:
+                cards[card] = 1
+            else:
+                cards[card] += 1
+
+        return cards
 
     def hand_type(self) -> HandType:
         max_card = max(self.cards.values())
@@ -83,13 +90,7 @@ class Hand:
         raise Exception("Can't find hand type!")
 
     def hand_type_test(self, hand) -> HandType:
-        card_dict = {}
-
-        for card in hand:
-            if card not in card_dict:
-                card_dict[card] = 1
-            else:
-                card_dict[card] += 1
+        card_dict = self._get_card_dict(hand)
     
         max_card = max(card_dict.values())
 
@@ -117,8 +118,15 @@ class Hand:
         raise Exception("Can't find hand type!")
 
     def joker_type(self) -> HandType:
-        if self.hand == "JJ857":
-            breakpoint()
+        translated_cards = self.translated(joker = True)
+        translated_cards = self._get_card_dict(translated_cards)
+
+        second_most_common_card_translated = sorted(translated_cards, key=translated_cards.get)[-1]
+
+        if second_most_common_card_translated in UNTRANSLATE_JOKER:
+            second_most_common_card = UNTRANSLATE_JOKER[second_most_common_card_translated]
+        else:
+            second_most_common_card = second_most_common_card_translated
     
         most_common_card = max(self.cards, key=self.cards.get)
         highest_card = max(self.translated(joker = True))
@@ -126,8 +134,13 @@ class Hand:
         if highest_card in UNTRANSLATE_JOKER:
             highest_card = UNTRANSLATE_JOKER[highest_card]
 
-        if most_common_card == "J":
+        two_highest = sorted([x for x in self.cards.values()])[-2:]
+        is_tied = len(set(two_highest)) != len(two_highest)
+
+        if most_common_card == "J" and not is_tied:
             most_common_card = highest_card
+        elif most_common_card == "J" and is_tied:
+            most_common_card = second_most_common_card
 
         new_hand = self.hand.replace("J", most_common_card)
 
@@ -205,12 +218,12 @@ def solve():
 
     for jgroup in jgroups:
         jgroups[jgroup] = sorted(jgroups[jgroup], key = lambda hand: hand.translated(joker = True))
-        print(jgroups[jgroup])
 
     rank = 1
     answer = 0
     
     for jgroup in jgroups:
+        # print(jgroup)
         for hand in jgroups[jgroup]:
             # print(f"{hand} - rank {rank} * bid {hand.bid}")
             answer += rank * hand.bid
