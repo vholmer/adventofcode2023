@@ -94,9 +94,7 @@ class Walker:
         return steps_to_z
 
     def walk_z(self) -> None:
-        """Walk normally until Z-key loop"""
         # While not in first Z-key, walk to next Z-key and build list
-        # if not self.z_dists:
         while True:
             steps_to_z = self.walk_to_z()
         
@@ -111,7 +109,6 @@ class Walker:
 
             if in_first_z:
                 break
-        # Walk to next Z
 
 def solve():
     file = open("data/8/data.txt")
