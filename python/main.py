@@ -4,6 +4,7 @@ from src import (
     day5,
     day6,
     day7,
+    day8,
 )
 
 def main():
@@ -12,6 +13,7 @@ def main():
     day5.solve()
     day6.solve()
     day7.solve()
+    day8.solve()
 
 if __name__ == "__main__":
     main()
